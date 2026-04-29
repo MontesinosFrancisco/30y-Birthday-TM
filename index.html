@@ -9,52 +9,59 @@ body {
   margin:0;
   font-family: 'Segoe UI', sans-serif;
   background: linear-gradient(135deg,#ff9a9e,#fecfef);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
   overflow:hidden;
+}
+
+/* Floating background hearts */
+.bg-heart {
+  position:fixed;
+  font-size:18px;
+  color:#ff6b81;
+  opacity:0.2;
+  animation: floatBg 10s linear infinite;
+}
+
+@keyframes floatBg {
+  from { transform:translateY(100vh); }
+  to { transform:translateY(-10vh); }
 }
 
 .container {
   width:90%;
   max-width:600px;
-  padding:35px;
+  margin: auto;
+  margin-top:10vh;
+  padding:30px;
   border-radius:25px;
-  background:rgba(255,255,255,0.7);
+  background:rgba(255,255,255,0.75);
   backdrop-filter: blur(15px);
-  box-shadow: 0 10px 40px rgba(255,105,135,0.3);
   text-align:center;
-  animation: fadeIn 0.8s ease;
+  box-shadow:0 10px 40px rgba(255,105,135,0.3);
 }
 
 h1 { color:#c44569; }
 
-#story { opacity:0.7; margin-bottom:20px; }
-
 input {
   padding:12px;
   width:70%;
-  border-radius:12px;
   border:none;
+  border-radius:12px;
 }
 
 button {
-  padding:12px 18px;
+  padding:12px;
   border:none;
   border-radius:12px;
   background:#ff6b81;
   color:white;
-  cursor:pointer;
   margin-top:10px;
-  transition:0.2s;
 }
 
-button:hover {
-  transform:scale(1.05);
+/* Final puzzle */
+.tiles, .slots {
+  margin-top:15px;
 }
 
-/* Tiles */
 .tile {
   display:inline-block;
   padding:14px 18px;
@@ -63,52 +70,53 @@ button:hover {
   color:white;
   border-radius:12px;
   font-size:20px;
-  cursor:grab;
+  cursor:pointer;
   transition:0.2s;
 }
 
-.tile:hover { transform:scale(1.1); }
-
-.zone {
-  min-height:70px;
-  border:2px dashed #ff6b81;
-  border-radius:15px;
-  margin:15px 0;
-  padding:10px;
-  background:rgba(255,255,255,0.5);
-  transition:0.3s;
+.tile:hover {
+  transform:scale(1.1);
 }
 
-.zone.active { background:#ffe3ea; }
-
-/* Fade */
-.fade {
-  animation: fadeSwitch 0.5s;
+.slot {
+  display:inline-block;
+  width:40px;
+  height:50px;
+  margin:5px;
+  border-bottom:3px solid #ff6b81;
+  font-size:22px;
+  line-height:50px;
 }
 
-@keyframes fadeSwitch {
-  from {opacity:0; transform:translateY(15px);}
-  to {opacity:1; transform:translateY(0);}
+.correct {
+  color:#ff4d6d;
+  animation: pop 0.3s;
 }
 
-/* Hearts */
+@keyframes pop {
+  0% { transform:scale(0.5); }
+  100% { transform:scale(1); }
+}
+
+/* Hearts burst */
 .heart {
   position:fixed;
   color:#ff4d6d;
-  font-size:20px;
   animation: floatUp 2s linear forwards;
 }
 
 @keyframes floatUp {
-  from { transform:translateY(0) scale(1); opacity:1; }
-  to { transform:translateY(-150px) scale(1.5); opacity:0; }
+  from { transform:translateY(0); opacity:1; }
+  to { transform:translateY(-150px); opacity:0; }
 }
 </style>
 </head>
 
 <body>
 
-<div class="container fade" id="app">
+<div id="bg"></div>
+
+<div class="container" id="app">
   <h1>For You ❤️</h1>
   <p id="story"></p>
 
@@ -121,6 +129,33 @@ button:hover {
 </div>
 
 <script>
+/* Floating hearts background */
+function createBgHearts(){
+  for(let i=0;i<20;i++){
+    let h=document.createElement("div");
+    h.className="bg-heart";
+    h.innerText="💖";
+    h.style.left=Math.random()*100+"vw";
+    h.style.animationDuration=(6+Math.random()*6)+"s";
+    document.body.appendChild(h);
+  }
+}
+createBgHearts();
+
+/* Hearts burst */
+function heartsBurst(){
+  for(let i=0;i<15;i++){
+    let h=document.createElement("div");
+    h.className="heart";
+    h.innerText="💖";
+    h.style.left=Math.random()*100+"vw";
+    h.style.top="60vh";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),2000);
+  }
+}
+
+/* Puzzle */
 const puzzles = [
 ["We stayed even when it was hard. What is that called?","love"],
 ["A dance you love…","bachata"],
@@ -131,51 +166,20 @@ const puzzles = [
 ["The pedagogy thinker you always mention","tulodziecki"]
 ];
 
-const storyText = [
-"We weren’t perfect…",
-"But we stayed.",
-"We kept going.",
-"We trusted.",
-"We dreamed.",
-"We rested.",
-"We grew."
-];
-
 let i=0;
 
 function load(){
-  const app = document.getElementById("app");
-  app.classList.remove("fade");
-  void app.offsetWidth;
-  app.classList.add("fade");
-
-  document.getElementById("q").innerText = puzzles[i][0];
-  document.getElementById("story").innerText = storyText[i];
+  document.getElementById("q").innerText=puzzles[i][0];
   document.getElementById("a").value="";
-  document.getElementById("feedback").innerText="";
-}
-
-function heartsBurst(){
-  for(let i=0;i<15;i++){
-    let h=document.createElement("div");
-    h.className="heart";
-    h.innerText="💖";
-    h.style.left=Math.random()*100+"vw";
-    h.style.top="60vh";
-    document.body.appendChild(h);
-
-    setTimeout(()=>h.remove(),2000);
-  }
 }
 
 function check(){
-  let v = document.getElementById("a").value.toLowerCase().trim();
-
-  if(v === puzzles[i][1]){
+  let v=document.getElementById("a").value.toLowerCase().trim();
+  if(v===puzzles[i][1]){
     heartsBurst();
     i++;
-    if(i < puzzles.length){
-      setTimeout(load, 400);
+    if(i<puzzles.length){
+      load();
     } else {
       finalGame();
     }
@@ -184,70 +188,67 @@ function check(){
   }
 }
 
-/* FINAL GAME */
+/* FINAL GAME (CLICK SYSTEM) */
+
+const correctWord = "BACHATURO";
+let currentBuild = [];
 
 function finalGame(){
-  document.getElementById("app").innerHTML = `
-    <h2 class="fade">Final step…</h2>
-    <p>Put everything in the right order ❤️</p>
+  document.getElementById("app").innerHTML=`
+    <h2>Final step…</h2>
+    <p>Tap letters to build the word ❤️</p>
 
-    <div id="tiles" class="zone"></div>
-    <div id="drop" class="zone">Drop here</div>
+    <div class="slots" id="slots"></div>
+    <div class="tiles" id="tiles"></div>
 
     <button onclick="checkFinal()">Unlock</button>
-    <p id="feedback"></p>
   `;
 
-  const letters = ["R","C","H","B","O","T","A","A","U"];
+  const scrambled = ["R","C","H","B","O","T","A","A","U"];
 
-  const tilesContainer = document.getElementById("tiles");
+  /* slots */
+  for(let i=0;i<correctWord.length;i++){
+    let s=document.createElement("div");
+    s.className="slot";
+    s.id="slot-"+i;
+    document.getElementById("slots").appendChild(s);
+  }
 
-  letters.forEach((l, index) => {
-    let el = document.createElement("div");
-    el.className = "tile";
-    el.innerText = l;
-    el.id = "tile-" + index;
-    el.draggable = true;
+  /* tiles */
+  scrambled.forEach((l,idx)=>{
+    let t=document.createElement("div");
+    t.className="tile";
+    t.innerText=l;
 
-    el.ondragstart = (e) => {
-      e.dataTransfer.setData("id", el.id);
+    t.onclick=()=>{
+      if(currentBuild.length<correctWord.length){
+        document.getElementById("slot-"+currentBuild.length).innerText=l;
+        currentBuild.push(l);
+        t.style.visibility="hidden";
+      }
     };
 
-    tilesContainer.appendChild(el);
+    document.getElementById("tiles").appendChild(t);
   });
-
-  const drop = document.getElementById("drop");
-
-  drop.ondragover = (e) => {
-    e.preventDefault();
-    drop.classList.add("active");
-  };
-
-  drop.ondragleave = () => {
-    drop.classList.remove("active");
-  };
-
-  drop.ondrop = (e) => {
-    e.preventDefault();
-    drop.classList.remove("active");
-    const id = e.dataTransfer.getData("id");
-    drop.appendChild(document.getElementById(id));
-  };
 }
 
 /* CHECK FINAL */
 
 function checkFinal(){
-  let result="";
-  document.querySelectorAll("#drop .tile").forEach(el=>{
-    result+=el.innerText;
-  });
+  let result=currentBuild.join("");
 
-  if(result.toLowerCase()==="bachaturo"){
+  if(result===correctWord){
     heartsBurst();
-    setTimeout(reveal,500);
+    highlightCorrect();
+    setTimeout(reveal,600);
   } else {
     document.getElementById("feedback").innerText="Almost… ❤️";
+  }
+}
+
+function highlightCorrect(){
+  for(let i=0;i<correctWord.length;i++){
+    document.getElementById("slot-"+i).classList.add("correct");
   }
 }
 
@@ -255,22 +256,18 @@ function checkFinal(){
 
 function reveal(){
   document.getElementById("app").innerHTML=`
-    <h1 class="fade">💃🕺</h1>
+    <h1>💃🕺</h1>
     <h2>You found it ❤️</h2>
 
-    <p>Through everything…</p>
-    <p>We found our way again.</p>
-
-    <br>
+    <p>We chose each other again.</p>
 
     <h1 style="color:#ff4d6d;">BACHATURO</h1>
-
-    <br>
 
     <h2>📅 13 August</h2>
     <p>Something beautiful is waiting for us…</p>
   `;
 }
+
 load();
 </script>
 
