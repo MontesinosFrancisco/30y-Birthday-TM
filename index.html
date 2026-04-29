@@ -8,62 +8,102 @@
 body {
   margin:0;
   font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg,#1e1e2f,#3a3a6a);
-  color:white;
+  background: linear-gradient(135deg,#ff9a9e,#fecfef);
+  color:#5a2a3a;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
-  text-align:center;
 }
 
 .container {
   width:90%;
   max-width:600px;
-  padding:30px;
-  border-radius:20px;
-  background:rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
+  padding:35px;
+  border-radius:25px;
+  background:rgba(255,255,255,0.7);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 10px 40px rgba(255,105,135,0.3);
+  text-align:center;
+  animation: fadeIn 1s ease;
+}
+
+h1 {
+  margin-bottom:10px;
+}
+
+#story {
+  opacity:0.7;
+  margin-bottom:20px;
 }
 
 input {
   padding:12px;
   width:70%;
-  border-radius:10px;
+  border-radius:12px;
   border:none;
+  outline:none;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
 }
 
 button {
-  padding:12px;
+  padding:12px 18px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:#ff6b81;
   color:white;
   cursor:pointer;
   margin-top:10px;
+  transition:0.2s;
 }
+
+button:hover {
+  transform:scale(1.05);
+  background:#ff4d6d;
+}
+
+/* Tiles */
 
 .tile {
   display:inline-block;
-  padding:15px 18px;
+  padding:14px 18px;
   margin:6px;
   background:#ff6b81;
-  border-radius:10px;
+  color:white;
+  border-radius:12px;
+  font-size:20px;
   cursor:grab;
-  font-size:18px;
-  user-select:none;
+  box-shadow:0 4px 10px rgba(0,0,0,0.15);
+  transition:0.2s;
+}
+
+.tile:hover {
+  transform:scale(1.1);
 }
 
 .zone {
   min-height:70px;
-  border:2px dashed white;
-  margin:20px 0;
+  border:2px dashed #ff6b81;
+  border-radius:15px;
+  margin:15px 0;
   padding:10px;
-  border-radius:10px;
+  background:rgba(255,255,255,0.5);
 }
 
-#tiles {
+.zone.active {
+  background:#ffe3ea;
+}
+
+#feedback {
   margin-top:10px;
+  color:#c44569;
+}
+
+/* Animations */
+
+@keyframes fadeIn {
+  from {opacity:0; transform:translateY(20px);}
+  to {opacity:1; transform:translateY(0);}
 }
 </style>
 </head>
@@ -75,7 +115,7 @@ button {
   <p id="story"></p>
 
   <p id="q"></p>
-  <input id="a">
+  <input id="a" placeholder="Your answer...">
   <br>
   <button onclick="check()">Continue</button>
 
@@ -84,17 +124,14 @@ button {
 
 <script>
 const puzzles = [
-["We stayed even when it was hard. What is that called?","love","B"],
-["A dance you love…","bachata","A"],
-["A dance I love…","salsa","C"],
-["Who do you trust when things are uncertain?","god","H"],
-["Our future dog…","churro","A"],
-["Your favorite hobby 😴","sleeping","T"],
-["The pedagogy thinker you always mention","tulodziecki","U"]
+["We stayed even when it was hard. What is that called?","love"],
+["A dance you love…","bachata"],
+["A dance I love…","salsa"],
+["Who do you trust when things are uncertain?","god"],
+["Our future dog…","churro"],
+["Your favorite hobby 😴","sleeping"],
+["The pedagogy thinker you always mention","tulodziecki"]
 ];
-
-let i=0;
-let letters=[];
 
 const storyText = [
 "We weren’t perfect…",
@@ -105,6 +142,8 @@ const storyText = [
 "We rested.",
 "We grew."
 ];
+
+let i=0;
 
 function load(){
   document.getElementById("q").innerText = puzzles[i][0];
@@ -117,9 +156,7 @@ function check(){
   let v = document.getElementById("a").value.toLowerCase().trim();
 
   if(v === puzzles[i][1]){
-    letters.push(puzzles[i][2]); // hidden
     i++;
-
     if(i < puzzles.length){
       load();
     } else {
@@ -130,16 +167,12 @@ function check(){
   }
 }
 
-/* ---------- FINAL GAME ---------- */
-
-function shuffle(arr){
-  return arr.sort(()=>Math.random()-0.5);
-}
+/* FINAL GAME */
 
 function finalGame(){
   document.getElementById("app").innerHTML = `
     <h2>Final step…</h2>
-    <p>Take what you’ve discovered… and put it in order ❤️</p>
+    <p>Put everything in the right order ❤️</p>
 
     <div id="tiles" class="zone"></div>
     <div id="drop" class="zone">Drop here</div>
@@ -147,12 +180,11 @@ function finalGame(){
     <button onclick="checkFinal()">Unlock</button>
   `;
 
-  let finalLetters = [...letters, "R", "O"];
-  finalLetters = shuffle(finalLetters);
+  const letters = ["R","C","H","B","O","T","A","A","U"];
 
   const tilesContainer = document.getElementById("tiles");
 
-  finalLetters.forEach((l, index) => {
+  letters.forEach((l, index) => {
     let el = document.createElement("div");
     el.className = "tile";
     el.innerText = l;
@@ -168,17 +200,26 @@ function finalGame(){
 
   const drop = document.getElementById("drop");
 
-  drop.ondragover = (e) => e.preventDefault();
+  drop.ondragover = (e) => {
+    e.preventDefault();
+    drop.classList.add("active");
+  };
+
+  drop.ondragleave = () => {
+    drop.classList.remove("active");
+  };
 
   drop.ondrop = (e) => {
     e.preventDefault();
+    drop.classList.remove("active");
+
     const id = e.dataTransfer.getData("id");
     const el = document.getElementById(id);
     drop.appendChild(el);
   };
 }
 
-/* ---------- CHECK FINAL ---------- */
+/* CHECK FINAL */
 
 function checkFinal(){
   let result = "";
@@ -189,11 +230,11 @@ function checkFinal(){
   if(result.toLowerCase() === "bachaturo"){
     reveal();
   } else {
-    alert("Not quite… try again ❤️");
+    document.getElementById("feedback").innerText="Almost… try again ❤️";
   }
 }
 
-/* ---------- FINAL REVEAL ---------- */
+/* FINAL REVEAL */
 
 function reveal(){
   document.getElementById("app").innerHTML = `
@@ -205,7 +246,7 @@ function reveal(){
 
     <br>
 
-    <h1>BACHATURO</h1>
+    <h1 style="color:#ff4d6d;">BACHATURO</h1>
 
     <br>
 
