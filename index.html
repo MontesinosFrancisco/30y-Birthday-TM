@@ -5,248 +5,190 @@
 <title>For You ❤️</title>
 
 <style>
-* { box-sizing: border-box; }
-
 body {
   margin:0;
   font-family: 'Segoe UI', sans-serif;
   background: linear-gradient(135deg,#1e1e2f,#3a3a6a);
-  color: #fff;
+  color:white;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
   text-align:center;
-  overflow:hidden;
 }
 
 .container {
-  width: 90%;
-  max-width: 600px;
-  padding: 30px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(15px);
-  box-shadow: 0 0 40px rgba(0,0,0,0.4);
-  animation: fadeIn 1s ease;
-}
-
-h1 {
-  font-size: 2em;
-  margin-bottom:10px;
-}
-
-#story {
-  font-size: 1em;
-  opacity:0.8;
-  margin-bottom:20px;
-  min-height:40px;
+  width:90%;
+  max-width:600px;
+  padding:30px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
 }
 
 input {
   padding:12px;
   width:70%;
-  border:none;
   border-radius:10px;
-  font-size:16px;
+  border:none;
 }
 
 button {
-  padding:12px 20px;
+  padding:12px;
   border:none;
   border-radius:10px;
   background:#ff6b81;
   color:white;
   cursor:pointer;
-  margin-left:10px;
-}
-
-button:hover {
-  background:#ff4757;
 }
 
 #letters {
+  margin:15px;
+  font-size:22px;
   letter-spacing:8px;
-  font-size:20px;
-  margin-bottom:10px;
 }
 
-#feedback {
-  margin-top:10px;
-  color:#ffdede;
-}
-
-.progress-bar {
-  height:6px;
-  background:#444;
+.tile {
+  display:inline-block;
+  padding:15px;
+  margin:5px;
+  background:#ff6b81;
   border-radius:10px;
-  margin-bottom:20px;
-  overflow:hidden;
+  cursor:grab;
 }
 
-.progress {
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#ff6b81,#ff9a9e);
-  transition:0.4s;
+.dropzone {
+  min-height:60px;
+  border:2px dashed white;
+  margin-top:20px;
+  padding:10px;
 }
 
-.music-btn {
-  position:absolute;
-  top:20px;
-  right:20px;
-  background:none;
-  border:1px solid #fff;
-  color:#fff;
-  padding:8px 12px;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-@keyframes fadeIn {
-  from {opacity:0; transform:translateY(20px);}
-  to {opacity:1; transform:translateY(0);}
-}
 </style>
 </head>
 
 <body>
 
-<button class="music-btn" onclick="toggleMusic()">🎵</button>
-
-<div class="container">
-  <h1 id="title">For You ❤️</h1>
-  <div id="story"></div>
-
-  <div class="progress-bar">
-    <div class="progress" id="bar"></div>
-  </div>
+<div class="container" id="app">
+  <h1>For You ❤️</h1>
+  <p id="story"></p>
 
   <div id="letters"></div>
 
   <p id="q"></p>
-
-  <input id="a" placeholder="Your answer...">
+  <input id="a">
   <button onclick="check()">OK</button>
 
-  <div id="feedback"></div>
+  <p id="feedback"></p>
 </div>
-
-<audio id="music" loop>
-  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
-</audio>
 
 <script>
 const puzzles = [
-{
-q: "We had a difficult moment… but something stronger kept us here. What is it?",
-a: "love",
-l: "B",
-story: "Not everything was easy… but we stayed."
-},
-{
-q: "A dance you love… close, soft, emotional.",
-a: "bachata",
-l: "A",
-story: "You bring rhythm into my life."
-},
-{
-q: "A dance I love… faster, full of energy.",
-a: "salsa",
-l: "C",
-story: "And together… we balance each other."
-},
-{
-q: "Who do you trust when everything feels uncertain?",
-a: "god",
-l: "H",
-story: "Faith keeps us grounded."
-},
-{
-q: "Our future dog… what’s the name?",
-a: "churro",
-l: "A",
-story: "And we dream about what’s coming."
-},
-{
-q: "Your favorite hobby 😴",
-a: "sleeping",
-l: "T",
-story: "Even in rest… we grow."
-},
-{
-q: "The pedagogy thinker you always mention",
-a: "tulodziecki",
-l: "U",
-story: "You inspire me with your passion."
-},
-{
-q: "Put everything together. What word did you build?",
-a: "bachaturo",
-l: "RO",
-story: "Everything led to this…"
-}
+["We stayed even when it was hard. What is that called?","love","B"],
+["Your dance","bachata","A"],
+["My dance","salsa","C"],
+["Who guides us?","god","H"],
+["Future dog name","churro","A"],
+["Favorite hobby","sleeping","T"],
+["Pedagogy thinker","tulodziecki","U"]
 ];
 
 let i=0;
-let letters="";
-let musicPlaying=false;
+let letters=[];
 
 function load(){
-  document.getElementById("q").innerText = puzzles[i].q;
-  document.getElementById("story").innerText = puzzles[i].story;
-  document.getElementById("a").value="";
-  document.getElementById("feedback").innerText="";
-  updateBar();
+  document.getElementById("q").innerText=puzzles[i][0];
+  document.getElementById("story").innerText=[
+    "We weren’t perfect…",
+    "But we stayed.",
+    "We grow together.",
+    "We trust.",
+    "We dream.",
+    "We rest.",
+    "We inspire."
+  ][i];
+}
+
+function shuffle(array){
+  return array.sort(()=>Math.random()-0.5);
 }
 
 function check(){
-  let v = document.getElementById("a").value.toLowerCase().trim();
-
-  if(v === puzzles[i].a){
-    letters += puzzles[i].l;
-    document.getElementById("letters").innerText = letters;
-
+  let v=document.getElementById("a").value.toLowerCase().trim();
+  if(v===puzzles[i][1]){
+    letters.push(puzzles[i][2]);
+    document.getElementById("letters").innerText=shuffle([...letters]).join(" ");
+    document.getElementById("a").value="";
     i++;
-    if(i < puzzles.length){
+
+    if(i<puzzles.length){
       load();
     } else {
-      final();
+      finalGame();
     }
   } else {
-    document.getElementById("feedback").innerText = "Hmm… try again ❤️";
+    document.getElementById("feedback").innerText="Try again ❤️";
   }
 }
 
-function updateBar(){
-  let percent = (i / puzzles.length) * 100;
-  document.getElementById("bar").style.width = percent + "%";
-}
+function finalGame(){
+  document.getElementById("app").innerHTML=`
+    <h2>Final step…</h2>
+    <p>Put everything in the right order ❤️</p>
 
-function final(){
-  document.body.innerHTML = `
-  <div class="container">
-    <h1>${letters} 💃🕺</h1>
-    <p>We went through something…</p>
-    <p>But we chose each other again.</p>
-    <p>And this… is just the beginning ❤️</p>
-    <br>
-    <h2>📅 Save the date</h2>
-    <h1>13 August</h1>
-    <p>Something beautiful is waiting for us…</p>
-  </div>
+    <div id="tiles"></div>
+    <div class="dropzone" id="drop"></div>
+
+    <button onclick="checkFinal()">Unlock</button>
   `;
+
+  let finalLetters=[...letters,"R","O"]; // complete word
+  finalLetters=shuffle(finalLetters);
+
+  let tilesHTML="";
+  finalLetters.forEach((l,i)=>{
+    tilesHTML+=`<div class="tile" draggable="true" ondragstart="drag(event)" id="t${i}">${l}</div>`;
+  });
+
+  document.getElementById("tiles").innerHTML=tilesHTML;
+
+  const drop=document.getElementById("drop");
+  drop.ondragover=(e)=>e.preventDefault();
+  drop.ondrop=(e)=>{
+    e.preventDefault();
+    const id=e.dataTransfer.getData("text");
+    const el=document.getElementById(id);
+    drop.appendChild(el);
+  };
 }
 
-function toggleMusic(){
-  const m = document.getElementById("music");
-  if(musicPlaying){
-    m.pause();
-    musicPlaying=false;
+function drag(ev){
+  ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function checkFinal(){
+  let result="";
+  document.querySelectorAll("#drop .tile").forEach(el=>{
+    result+=el.innerText;
+  });
+
+  if(result.toLowerCase()==="bachaturo"){
+    reveal();
   } else {
-    m.play();
-    musicPlaying=true;
+    alert("Almost… try again ❤️");
   }
+}
+
+function reveal(){
+  document.getElementById("app").innerHTML=`
+    <h1>💃🕺</h1>
+    <h2>You did it ❤️</h2>
+    <p>We chose each other again.</p>
+    <p>This is just the beginning.</p>
+    <br>
+    <h1>📅 13 August</h1>
+    <p>Something beautiful is waiting for us…</p>
+  `;
 }
 
 load();
