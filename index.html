@@ -9,11 +9,11 @@ body {
   margin:0;
   font-family: 'Segoe UI', sans-serif;
   background: linear-gradient(135deg,#ff9a9e,#fecfef);
-  color:#5a2a3a;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
+  overflow:hidden;
 }
 
 .container {
@@ -25,25 +25,18 @@ body {
   backdrop-filter: blur(15px);
   box-shadow: 0 10px 40px rgba(255,105,135,0.3);
   text-align:center;
-  animation: fadeIn 1s ease;
+  animation: fadeIn 0.8s ease;
 }
 
-h1 {
-  margin-bottom:10px;
-}
+h1 { color:#c44569; }
 
-#story {
-  opacity:0.7;
-  margin-bottom:20px;
-}
+#story { opacity:0.7; margin-bottom:20px; }
 
 input {
   padding:12px;
   width:70%;
   border-radius:12px;
   border:none;
-  outline:none;
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
 }
 
 button {
@@ -59,11 +52,9 @@ button {
 
 button:hover {
   transform:scale(1.05);
-  background:#ff4d6d;
 }
 
 /* Tiles */
-
 .tile {
   display:inline-block;
   padding:14px 18px;
@@ -73,13 +64,10 @@ button:hover {
   border-radius:12px;
   font-size:20px;
   cursor:grab;
-  box-shadow:0 4px 10px rgba(0,0,0,0.15);
   transition:0.2s;
 }
 
-.tile:hover {
-  transform:scale(1.1);
-}
+.tile:hover { transform:scale(1.1); }
 
 .zone {
   min-height:70px;
@@ -88,34 +76,44 @@ button:hover {
   margin:15px 0;
   padding:10px;
   background:rgba(255,255,255,0.5);
+  transition:0.3s;
 }
 
-.zone.active {
-  background:#ffe3ea;
+.zone.active { background:#ffe3ea; }
+
+/* Fade */
+.fade {
+  animation: fadeSwitch 0.5s;
 }
 
-#feedback {
-  margin-top:10px;
-  color:#c44569;
-}
-
-/* Animations */
-
-@keyframes fadeIn {
-  from {opacity:0; transform:translateY(20px);}
+@keyframes fadeSwitch {
+  from {opacity:0; transform:translateY(15px);}
   to {opacity:1; transform:translateY(0);}
+}
+
+/* Hearts */
+.heart {
+  position:fixed;
+  color:#ff4d6d;
+  font-size:20px;
+  animation: floatUp 2s linear forwards;
+}
+
+@keyframes floatUp {
+  from { transform:translateY(0) scale(1); opacity:1; }
+  to { transform:translateY(-150px) scale(1.5); opacity:0; }
 }
 </style>
 </head>
 
 <body>
 
-<div class="container" id="app">
+<div class="container fade" id="app">
   <h1>For You ❤️</h1>
   <p id="story"></p>
 
   <p id="q"></p>
-  <input id="a" placeholder="Your answer...">
+  <input id="a">
   <br>
   <button onclick="check()">Continue</button>
 
@@ -146,19 +144,38 @@ const storyText = [
 let i=0;
 
 function load(){
+  const app = document.getElementById("app");
+  app.classList.remove("fade");
+  void app.offsetWidth;
+  app.classList.add("fade");
+
   document.getElementById("q").innerText = puzzles[i][0];
   document.getElementById("story").innerText = storyText[i];
   document.getElementById("a").value="";
   document.getElementById("feedback").innerText="";
 }
 
+function heartsBurst(){
+  for(let i=0;i<15;i++){
+    let h=document.createElement("div");
+    h.className="heart";
+    h.innerText="💖";
+    h.style.left=Math.random()*100+"vw";
+    h.style.top="60vh";
+    document.body.appendChild(h);
+
+    setTimeout(()=>h.remove(),2000);
+  }
+}
+
 function check(){
   let v = document.getElementById("a").value.toLowerCase().trim();
 
   if(v === puzzles[i][1]){
+    heartsBurst();
     i++;
     if(i < puzzles.length){
-      load();
+      setTimeout(load, 400);
     } else {
       finalGame();
     }
@@ -171,13 +188,14 @@ function check(){
 
 function finalGame(){
   document.getElementById("app").innerHTML = `
-    <h2>Final step…</h2>
+    <h2 class="fade">Final step…</h2>
     <p>Put everything in the right order ❤️</p>
 
     <div id="tiles" class="zone"></div>
     <div id="drop" class="zone">Drop here</div>
 
     <button onclick="checkFinal()">Unlock</button>
+    <p id="feedback"></p>
   `;
 
   const letters = ["R","C","H","B","O","T","A","A","U"];
@@ -212,33 +230,32 @@ function finalGame(){
   drop.ondrop = (e) => {
     e.preventDefault();
     drop.classList.remove("active");
-
     const id = e.dataTransfer.getData("id");
-    const el = document.getElementById(id);
-    drop.appendChild(el);
+    drop.appendChild(document.getElementById(id));
   };
 }
 
 /* CHECK FINAL */
 
 function checkFinal(){
-  let result = "";
-  document.querySelectorAll("#drop .tile").forEach(el => {
-    result += el.innerText;
+  let result="";
+  document.querySelectorAll("#drop .tile").forEach(el=>{
+    result+=el.innerText;
   });
 
-  if(result.toLowerCase() === "bachaturo"){
-    reveal();
+  if(result.toLowerCase()==="bachaturo"){
+    heartsBurst();
+    setTimeout(reveal,500);
   } else {
-    document.getElementById("feedback").innerText="Almost… try again ❤️";
+    document.getElementById("feedback").innerText="Almost… ❤️";
   }
 }
 
 /* FINAL REVEAL */
 
 function reveal(){
-  document.getElementById("app").innerHTML = `
-    <h1>💃🕺</h1>
+  document.getElementById("app").innerHTML=`
+    <h1 class="fade">💃🕺</h1>
     <h2>You found it ❤️</h2>
 
     <p>Through everything…</p>
@@ -254,7 +271,6 @@ function reveal(){
     <p>Something beautiful is waiting for us…</p>
   `;
 }
-
 load();
 </script>
 
