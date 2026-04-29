@@ -40,30 +40,31 @@ button {
   background:#ff6b81;
   color:white;
   cursor:pointer;
-}
-
-#letters {
-  margin:15px;
-  font-size:22px;
-  letter-spacing:8px;
+  margin-top:10px;
 }
 
 .tile {
   display:inline-block;
-  padding:15px;
-  margin:5px;
+  padding:15px 18px;
+  margin:6px;
   background:#ff6b81;
   border-radius:10px;
   cursor:grab;
+  font-size:18px;
+  user-select:none;
 }
 
-.dropzone {
-  min-height:60px;
+.zone {
+  min-height:70px;
   border:2px dashed white;
-  margin-top:20px;
+  margin:20px 0;
   padding:10px;
+  border-radius:10px;
 }
 
+#tiles {
+  margin-top:10px;
+}
 </style>
 </head>
 
@@ -73,11 +74,10 @@ button {
   <h1>For You ❤️</h1>
   <p id="story"></p>
 
-  <div id="letters"></div>
-
   <p id="q"></p>
   <input id="a">
-  <button onclick="check()">OK</button>
+  <br>
+  <button onclick="check()">Continue</button>
 
   <p id="feedback"></p>
 </div>
@@ -85,43 +85,42 @@ button {
 <script>
 const puzzles = [
 ["We stayed even when it was hard. What is that called?","love","B"],
-["Your dance","bachata","A"],
-["My dance","salsa","C"],
-["Who guides us?","god","H"],
-["Future dog name","churro","A"],
-["Favorite hobby","sleeping","T"],
-["Pedagogy thinker","tulodziecki","U"]
+["A dance you love…","bachata","A"],
+["A dance I love…","salsa","C"],
+["Who do you trust when things are uncertain?","god","H"],
+["Our future dog…","churro","A"],
+["Your favorite hobby 😴","sleeping","T"],
+["The pedagogy thinker you always mention","tulodziecki","U"]
 ];
 
 let i=0;
 let letters=[];
 
-function load(){
-  document.getElementById("q").innerText=puzzles[i][0];
-  document.getElementById("story").innerText=[
-    "We weren’t perfect…",
-    "But we stayed.",
-    "We grow together.",
-    "We trust.",
-    "We dream.",
-    "We rest.",
-    "We inspire."
-  ][i];
-}
+const storyText = [
+"We weren’t perfect…",
+"But we stayed.",
+"We kept going.",
+"We trusted.",
+"We dreamed.",
+"We rested.",
+"We grew."
+];
 
-function shuffle(array){
-  return array.sort(()=>Math.random()-0.5);
+function load(){
+  document.getElementById("q").innerText = puzzles[i][0];
+  document.getElementById("story").innerText = storyText[i];
+  document.getElementById("a").value="";
+  document.getElementById("feedback").innerText="";
 }
 
 function check(){
-  let v=document.getElementById("a").value.toLowerCase().trim();
-  if(v===puzzles[i][1]){
-    letters.push(puzzles[i][2]);
-    document.getElementById("letters").innerText=shuffle([...letters]).join(" ");
-    document.getElementById("a").value="";
+  let v = document.getElementById("a").value.toLowerCase().trim();
+
+  if(v === puzzles[i][1]){
+    letters.push(puzzles[i][2]); // hidden
     i++;
 
-    if(i<puzzles.length){
+    if(i < puzzles.length){
       load();
     } else {
       finalGame();
@@ -131,62 +130,86 @@ function check(){
   }
 }
 
-function finalGame(){
-  document.getElementById("app").innerHTML=`
-    <h2>Final step…</h2>
-    <p>Put everything in the right order ❤️</p>
+/* ---------- FINAL GAME ---------- */
 
-    <div id="tiles"></div>
-    <div class="dropzone" id="drop"></div>
+function shuffle(arr){
+  return arr.sort(()=>Math.random()-0.5);
+}
+
+function finalGame(){
+  document.getElementById("app").innerHTML = `
+    <h2>Final step…</h2>
+    <p>Take what you’ve discovered… and put it in order ❤️</p>
+
+    <div id="tiles" class="zone"></div>
+    <div id="drop" class="zone">Drop here</div>
 
     <button onclick="checkFinal()">Unlock</button>
   `;
 
-  let finalLetters=[...letters,"R","O"]; // complete word
-  finalLetters=shuffle(finalLetters);
+  let finalLetters = [...letters, "R", "O"];
+  finalLetters = shuffle(finalLetters);
 
-  let tilesHTML="";
-  finalLetters.forEach((l,i)=>{
-    tilesHTML+=`<div class="tile" draggable="true" ondragstart="drag(event)" id="t${i}">${l}</div>`;
+  const tilesContainer = document.getElementById("tiles");
+
+  finalLetters.forEach((l, index) => {
+    let el = document.createElement("div");
+    el.className = "tile";
+    el.innerText = l;
+    el.id = "tile-" + index;
+    el.draggable = true;
+
+    el.ondragstart = (e) => {
+      e.dataTransfer.setData("id", el.id);
+    };
+
+    tilesContainer.appendChild(el);
   });
 
-  document.getElementById("tiles").innerHTML=tilesHTML;
+  const drop = document.getElementById("drop");
 
-  const drop=document.getElementById("drop");
-  drop.ondragover=(e)=>e.preventDefault();
-  drop.ondrop=(e)=>{
+  drop.ondragover = (e) => e.preventDefault();
+
+  drop.ondrop = (e) => {
     e.preventDefault();
-    const id=e.dataTransfer.getData("text");
-    const el=document.getElementById(id);
+    const id = e.dataTransfer.getData("id");
+    const el = document.getElementById(id);
     drop.appendChild(el);
   };
 }
 
-function drag(ev){
-  ev.dataTransfer.setData("text", ev.target.id);
-}
+/* ---------- CHECK FINAL ---------- */
 
 function checkFinal(){
-  let result="";
-  document.querySelectorAll("#drop .tile").forEach(el=>{
-    result+=el.innerText;
+  let result = "";
+  document.querySelectorAll("#drop .tile").forEach(el => {
+    result += el.innerText;
   });
 
-  if(result.toLowerCase()==="bachaturo"){
+  if(result.toLowerCase() === "bachaturo"){
     reveal();
   } else {
-    alert("Almost… try again ❤️");
+    alert("Not quite… try again ❤️");
   }
 }
 
+/* ---------- FINAL REVEAL ---------- */
+
 function reveal(){
-  document.getElementById("app").innerHTML=`
+  document.getElementById("app").innerHTML = `
     <h1>💃🕺</h1>
-    <h2>You did it ❤️</h2>
-    <p>We chose each other again.</p>
-    <p>This is just the beginning.</p>
+    <h2>You found it ❤️</h2>
+
+    <p>Through everything…</p>
+    <p>We found our way again.</p>
+
     <br>
-    <h1>📅 13 August</h1>
+
+    <h1>BACHATURO</h1>
+
+    <br>
+
+    <h2>📅 13 August</h2>
     <p>Something beautiful is waiting for us…</p>
   `;
 }
